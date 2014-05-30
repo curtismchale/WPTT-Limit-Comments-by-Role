@@ -30,9 +30,9 @@ class WPTT_Limit_Comments{
 	function __construct(){
 
 		add_filter( 'comments_array', array( $this, 'limit_comments' ), 10, 2 );
-		//add_filter( 'the_comments', array( $this, 'limit_comments' ), 10, 2 );
+		add_filter( 'the_comments', array( $this, 'limit_comments' ), 10, 2 );
 
-		//add_filter( 'get_comments_number', array( $this, 'proper_number' ), 10, 2 );
+		add_filter( 'get_comments_number', array( $this, 'proper_number' ), 10, 2 );
 
 	} // construct
 
