@@ -133,19 +133,41 @@ class WPTT_Limit_Comments{
 
 			if ( $c->comment_approved != 1 && ! is_admin() ) continue; // skip comments that are not approved only if we are not in the WP Admin
 
-			$filtered_comments = $this->allow_admin_comments( $current_user_role, $comment_user, $c );
+			$filtered_comments = array_merge( $filtered_comments, $this->allow_admin_comments( $current_user_role, $comment_user, $c ) );
 
-			$comment_user_role = $this->get_user_role( $comment_user->ID );
-
-			if ( $current_user_role === $comment_user_role ){
-				$filtered_comments[] = $c;
-			}
+			$filtered_comments = array_merge( $filtered_comments, $this->match_role( $current_user_role, $comment_user, $c ) );
 
 		} // foreach
 
 		return $filtered_comments;
 
 	} // filter_comments
+
+	/**
+	 * Returns comments if the roles of the current user and the user who made the comment match
+	 * @since 1.0
+	 * @author SFNdesign, Curtis McHale
+	 * @access private
+	 *
+	 * @param object        $current_user_role      required            WP_User Object for currently signed in user
+	 * @param object        $comment_user           required            WP_User Object for user that made comment
+	 * @param array         $c                      required            The current comment we are checking
+	 * @uses $this->get_user_role()                                     Returns the role of the user. Defaults to current user if no User ID provided
+	 */
+	private function match_role( $current_user_role, $comment_user, $c ){
+
+		$should_we_match_by_role = apply_filters( 'wptt_should_we_match_by_role', true );
+		$matched_by_role = array();
+
+		$comment_user_role = $this->get_user_role( $comment_user->ID );
+
+		if ( $current_user_role === $comment_user_role && $should_we_match_by_role ){
+			$matched_by_role[] = $c;
+		}
+
+		return $matched_by_role;
+
+	} // match_role
 
 	/**
 	 * Filters comments by user role
