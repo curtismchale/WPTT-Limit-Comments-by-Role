@@ -119,7 +119,7 @@ class WPTT_Limit_Comments{
 	 * @param int       $current_user_role      required        The role for the current_user
 	 * @param array     $comments               required        The array of comments to filter
 	 * @uses get_user_by()                                      Returns user object given field and value
-	 * @uses user_can()                                         Returns true if given user has given capability
+	 * @uses $this->allow_admin_comments()                      Returns comments by admin to our comment array
 	 * @uses $this->get_user_by_role()                          Returns the role for a user defaults to current user if not provided with user_id
 	 * @return array    $filtered_comments                      Our filtered array of comments
 	 */
@@ -133,10 +133,7 @@ class WPTT_Limit_Comments{
 
 			if ( $c->comment_approved != 1 && ! is_admin() ) continue; // skip comments that are not approved only if we are not in the WP Admin
 
-			if ( user_can( $comment_user->ID, 'activate_plugins' ) ){
-				$filtered_comments[] = $c;
-				continue;
-			}
+			$filtered_comments = $this->allow_admin_comments( $current_user_role, $comment_user, $c );
 
 			$comment_user_role = $this->get_user_role( $comment_user->ID );
 
@@ -149,6 +146,33 @@ class WPTT_Limit_Comments{
 		return $filtered_comments;
 
 	} // filter_comments
+
+	/**
+	 * Filters comments by user role
+	 * @since 1.0
+	 * @author SFNdesign, Curtis McHale
+	 * @access private
+	 *
+	 * @param object    $current_user_role      required            WP_User Object for the currently signed in user
+	 * @param object    $comment_user           required            WP_User Object for the commenter
+	 * @param array     $c                      required            The comment we are currently dealing with
+	 * @uses user_can()                                             Returns true if given user_id has the given capability
+	 * @return $allowed_admin_comments                              Array of comments allowed through
+	 */
+	private function allow_admin_comments( $current_user_role, $comment_user, $c ){
+
+		$allow_admin            = apply_filters( 'wptt_allow_admin', true );
+		$allowed_admin_comments = array();
+
+
+		if ( user_can( $comment_user->ID, 'activate_plugins' ) && $allow_admin ){
+			$allowed_admin_comments[] = $c;
+			continue;
+		}
+
+		return $allowed_admin_comments;
+
+	} // filter_by_role
 
 	/**
 	 * Returns the role for the current user
